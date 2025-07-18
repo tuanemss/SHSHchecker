@@ -5,7 +5,9 @@
 #include <sstream>
 #include <cstdlib>
 #include <curl/curl.h>
+#include <regex>
 #include "json.hpp"
+#include <set>
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -62,16 +64,16 @@ std::string json_str(const json& j, const std::string& key) {
     return "";
 }
 
-// Convert ECID to decimal if it's in hex
-std::string convert_ecid_to_decimal(const std::string& ecid_input) {
-    if (ecid_input.find_first_not_of("0123456789") == std::string::npos) {
-        return ecid_input;  // Already decimal
-    }
-    uint64_t dec_ecid;
+bool is_hex(const std::string& str) {
+    return str.rfind("0x", 0) == 0 || std::regex_match(str, std::regex("^[0-9a-fA-F]+$"));
+}
+
+std::string hex_to_dec(const std::string& hex) {
+    unsigned long long dec;
     std::stringstream ss;
-    ss << std::hex << ecid_input;
-    ss >> dec_ecid;
-    return std::to_string(dec_ecid);
+    ss << std::hex << hex;
+    ss >> dec;
+    return std::to_string(dec);
 }
 
 int main(int argc, char* argv[]) {
@@ -80,14 +82,14 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::string raw_ecid = argv[1];
-    std::string ecid = convert_ecid_to_decimal(raw_ecid);
+    std::string input_ecid = argv[1];
+    std::string ecid = is_hex(input_ecid) ? hex_to_dec(input_ecid) : input_ecid;
 
     std::string url = "http://cydia.saurik.com/tss@home/api/check/" + ecid;
     std::string json_data = http_get(url);
 
     if (json_data.empty()) {
-        std::cerr << "Error: Empty response from server. Check ECID/model or your network.\n";
+        std::cerr << "Error: Empty response from server.\n";
         return 1;
     }
 
@@ -97,7 +99,41 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    for (const auto& blob : blobs) {
+    // Sort blobs by firmware
+    std::vector<json> sorted_blobs = blobs.get<std::vector<json>>();
+    std::sort(sorted_blobs.begin(), sorted_blobs.end(), [](const json& a, const json& b) {
+        return json_str(a, "firmware") < json_str(b, "firmware");
+    });
+
+    std::cout << "Found " << sorted_blobs.size() << " SHSH blobs for ECID " << ecid << ":\n";
+    for (size_t i = 0; i < sorted_blobs.size(); ++i) {
+        std::string fw = json_str(sorted_blobs[i], "firmware");
+        std::string build = json_str(sorted_blobs[i], "build");
+        std::string model = json_str(sorted_blobs[i], "model");
+        std::cout << "[" << (i + 1) << "] " << model << " - iOS " << fw << " (" << build << ")\n";
+    }
+
+    std::cout << "Enter blobs numbers to download (e.g. 1 3 5 or 1-5 ): ";
+    std::string input;
+    std::getline(std::cin, input);
+
+    std::set<int> selected_indices;
+    std::stringstream ss(input);
+    std::string token;
+    while (ss >> token) {
+        if (token.find('-') != std::string::npos) {
+            int start = std::stoi(token.substr(0, token.find('-')));
+            int end = std::stoi(token.substr(token.find('-') + 1));
+            for (int i = start; i <= end; ++i) selected_indices.insert(i - 1);
+        } else {
+            selected_indices.insert(std::stoi(token) - 1);
+        }
+    }
+
+    for (int idx : selected_indices) {
+        if (idx < 0 || idx >= (int)sorted_blobs.size()) continue;
+
+        const auto& blob = sorted_blobs[idx];
         std::string model = json_str(blob, "model");
         std::string build = json_str(blob, "build");
         std::string firmware = json_str(blob, "firmware");
@@ -110,7 +146,7 @@ int main(int argc, char* argv[]) {
         std::string filename = ecid + "-" + model + "-" + firmware + "-" + build + ".shsh";
         std::string path = subdir + "/" + filename;
 
-        std::cout << "Fetching blob for " << model << " iOS " << firmware << "...\n";
+        std::cout << "Downloading blob for " << model << " iOS " << firmware << "...\n";
 
         std::string manifest_url = "http://cydia.saurik.com/tss@home/api/manifest.xml/" + build + "/" + cpid + "/" + bdid;
         std::string manifest = http_get(manifest_url);
