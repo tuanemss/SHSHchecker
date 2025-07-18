@@ -62,13 +62,27 @@ std::string json_str(const json& j, const std::string& key) {
     return "";
 }
 
+// Convert ECID to decimal if it's in hex
+std::string convert_ecid_to_decimal(const std::string& ecid_input) {
+    if (ecid_input.find_first_not_of("0123456789") == std::string::npos) {
+        return ecid_input;  // Already decimal
+    }
+    uint64_t dec_ecid;
+    std::stringstream ss;
+    ss << std::hex << ecid_input;
+    ss >> dec_ecid;
+    return std::to_string(dec_ecid);
+}
+
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         std::cerr << "Usage: ./SHSHchecker <ECID> <MODEL>\n";
         return 1;
     }
 
-    std::string ecid = argv[1];
+    std::string raw_ecid = argv[1];
+    std::string ecid = convert_ecid_to_decimal(raw_ecid);
+
     std::string url = "http://cydia.saurik.com/tss@home/api/check/" + ecid;
     std::string json_data = http_get(url);
 
