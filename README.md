@@ -11,7 +11,7 @@ example:
     ./SHSHchecker 2339416931829 iPhone4,1
 
 Arguments:
-  <ECID>               ECID of the device ( only hexadecimal)
+  <ECID>               ECID of the device 
 
 
 
