@@ -12,4 +12,8 @@ example:
 
 Arguments:
   <ECID>               ECID of the device ( only hexadecimal)
+
+
+
+  
   <MODEL>              Device identifier (e.g., iPhone2,1)
