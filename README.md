@@ -2,7 +2,7 @@
 
 Usage:
 
-    make                  # Compile the program
+    make                  
   
     ./SHSHchecker <ECID> <MODEL>
   
