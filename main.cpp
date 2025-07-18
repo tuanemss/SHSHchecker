@@ -8,6 +8,8 @@
 #include <regex>
 #include "json.hpp"
 #include <set>
+#include <vector>
+#include <algorithm>
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -64,26 +66,43 @@ std::string json_str(const json& j, const std::string& key) {
     return "";
 }
 
+// Checks if string has hex letters a-f (or A-F)
 bool is_hex(const std::string& str) {
-    return str.rfind("0x", 0) == 0 || std::regex_match(str, std::regex("^[0-9a-fA-F]+$"));
+    for (char c : str) {
+        if ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+            return true;
+        }
+    }
+    return false;
 }
 
 std::string hex_to_dec(const std::string& hex) {
-    unsigned long long dec;
+    std::string hex_clean = hex;
+    if (hex_clean.rfind("0x", 0) == 0 || hex_clean.rfind("0X", 0) == 0) {
+        hex_clean = hex_clean.substr(2);
+    }
+    unsigned long long dec = 0;
     std::stringstream ss;
-    ss << std::hex << hex;
+    ss << std::hex << hex_clean;
     ss >> dec;
     return std::to_string(dec);
 }
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: ./SHSHchecker <ECID> <MODEL>\n";
+        std::cerr << "Usage: ./SHSHchecker <ECID>\n";
         return 1;
     }
 
     std::string input_ecid = argv[1];
-    std::string ecid = is_hex(input_ecid) ? hex_to_dec(input_ecid) : input_ecid;
+    std::string ecid;
+
+    // Convert hex to dec only if string contains letters a-f/A-F
+    if (is_hex(input_ecid)) {
+        ecid = hex_to_dec(input_ecid);
+    } else {
+        ecid = input_ecid;
+    }
 
     std::string url = "http://cydia.saurik.com/tss@home/api/check/" + ecid;
     std::string json_data = http_get(url);
@@ -99,7 +118,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Sort blobs by firmware
+    // Sort blobs by firmware version
     std::vector<json> sorted_blobs = blobs.get<std::vector<json>>();
     std::sort(sorted_blobs.begin(), sorted_blobs.end(), [](const json& a, const json& b) {
         return json_str(a, "firmware") < json_str(b, "firmware");
@@ -113,7 +132,7 @@ int main(int argc, char* argv[]) {
         std::cout << "[" << (i + 1) << "] " << model << " - iOS " << fw << " (" << build << ")\n";
     }
 
-    std::cout << "Enter blobs numbers to download (e.g. 1 3 5 or 1-5 ): ";
+    std::cout << "Enter blobs numbers to download (e.g. 1 3 5 or 1-5): ";
     std::string input;
     std::getline(std::cin, input);
 
@@ -161,7 +180,7 @@ int main(int argc, char* argv[]) {
         std::string blob_data = http_post("http://cydia.saurik.com/TSS/controller?action=2", manifest);
 
         if (blob_data.empty()) {
-            std::cerr << "Failed to download blob for " << build << "\n";
+            std::cerr << "Failed to download blobs for " << build << "\n";
             continue;
         }
 
