@@ -2,7 +2,8 @@
 
 Usage:
   make                  # Compile the program
-  ./SHSHchecker <ECID> <MODEL>
+  
+    ./SHSHchecker <ECID> <MODEL>
   
 example: ./SHSHchecker 2339416931829 iPhone4,1
 
