@@ -14,7 +14,7 @@
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 
-static std::string USER_AGENT = "savethemblobs/2.1";
+static std::string USER_AGENT = "tssserver/2.1";
 
 size_t write_to_string(void* ptr, size_t size, size_t nmemb, void* stream) {
     ((std::string*)stream)->append((char*)ptr, size * nmemb);
@@ -90,14 +90,13 @@ std::string hex_to_dec(const std::string& hex) {
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: ./SHSHchecker <ECID>\n";
+        std::cerr << "Usage: ./SHSHchecker <ECID> <MODEL>\n";
         return 1;
     }
 
     std::string input_ecid = argv[1];
     std::string ecid;
 
-    // Convert hex to dec only if string contains letters a-f/A-F
     if (is_hex(input_ecid)) {
         ecid = hex_to_dec(input_ecid);
     } else {
@@ -118,7 +117,6 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Sort blobs by firmware version
     std::vector<json> sorted_blobs = blobs.get<std::vector<json>>();
     std::sort(sorted_blobs.begin(), sorted_blobs.end(), [](const json& a, const json& b) {
         return json_str(a, "firmware") < json_str(b, "firmware");
@@ -132,7 +130,7 @@ int main(int argc, char* argv[]) {
         std::cout << "[" << (i + 1) << "] " << model << " - iOS " << fw << " (" << build << ")\n";
     }
 
-    std::cout << "Enter blobs numbers to download (e.g. 1 3 5 or 1-5): ";
+    std::cout << "Enter numbers to download (e.g. 1 3 5 or 1-5): ";
     std::string input;
     std::getline(std::cin, input);
 
@@ -165,7 +163,7 @@ int main(int argc, char* argv[]) {
         std::string filename = ecid + "-" + model + "-" + firmware + "-" + build + ".shsh";
         std::string path = subdir + "/" + filename;
 
-        std::cout << "Downloading blob for " << model << " iOS " << firmware << "...\n";
+        std::cout << "Downloading blobs for " << model << " iOS " << firmware << "...\n";
 
         std::string manifest_url = "http://cydia.saurik.com/tss@home/api/manifest.xml/" + build + "/" + cpid + "/" + bdid;
         std::string manifest = http_get(manifest_url);
