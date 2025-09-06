@@ -1,0 +1,9 @@
+Package: com.tuanem.shshchecker
+Name: SHSHchecker cli
+Version: 1.0
+Architecture: iphoneos-arm
+Description: check SHSH Blobs on Mterminal 
+Maintainer: tuanem
+Author: tuanem
+Section: System
+Tag: role::hacker
