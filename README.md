@@ -1,19 +1,20 @@
-# 🛠️ SHSHchecker – Công cụ kiểm tra SHSH cho thiết bị Apple
+# SHSHchecker – Công cụ kiểm tra SHSH cho thiết bị Apple
 
-## ✅ Giới thiệu
+# Giới thiệu
 **SHSHchecker** là một công cụ dòng lệnh đơn giản được viết bằng C++, dùng để kiểm tra thông tin về SHSH blob của thiết bị Apple thông qua ECID và model thiết bị.
 
-## 🖥️ Yêu cầu hệ thống
+# Yêu cầu hệ thống
 
-- Máy tính chạy **macOS** hoặc **Linux**
+- Máy tính chạy **macOS** hoặc **Linux** ( ios armv7 )
 - Trình biên dịch **g++**
+- Theos && SDK6.1
 - Đã cài đặt **Xcode Command Line Tools** (nếu dùng macOS):
   ```bash
   xcode-select --install
   ```
 - Có sẵn công cụ `make` (thường đi kèm với Xcode Tools)
 
-## 📦 Cách cài đặt và chạy
+## Cách cài đặt và chạy
 
 ### Bước 1: Giải nén
 Tải và giải nén thư mục `SHSHchecker-main.zip`.
@@ -43,7 +44,7 @@ Ví dụ:
 ./SHSHchecker 2339416931829 iPhone4,1
 ```
 
-## 🧾 Tham số chương trình
+## Tham số chương trình
 
 | Tham số      | Mô tả                                                                 |
 |--------------|----------------------------------------------------------------------|
@@ -55,7 +56,7 @@ Ví dụ:
 - Model thiết bị cần nhập đúng định dạng (ví dụ: `iPhone4,1`, không phải chỉ `iPhone 4`).
 - Nếu bạn nhập sai cú pháp, chương trình sẽ báo lỗi và yêu cầu nhập lại đúng định dạng.
 
-## 📂 Cấu trúc thư mục
+## Cấu trúc thư mục
 
 | Tệp tin         | Mô tả                                |
 |------------------|----------------------------------------|
@@ -67,3 +68,4 @@ Ví dụ:
 ##  Tác giả & Giấy phép
 - Dự án mã nguồn mở. Vui lòng kiểm tra trong mã nguồn để biết thông tin giấy phép cụ thể.
 - Nếu bạn muốn đóng góp hoặc báo lỗi, hãy gửi pull request hoặc issue tại kho lưu trữ gốc.
+- đối với ios hãy dùng theos và sdk6.1 và chạy **make package**
