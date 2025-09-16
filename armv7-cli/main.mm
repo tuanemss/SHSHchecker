@@ -89,7 +89,7 @@ int main() {
     std::string model, input_ecid;
     std::cout << "Enter device model (e.g., iPhone3,1): ";
     std::getline(std::cin, model);
-    std::cout << "Enter ECID (hex or dec): ";
+    std::cout << "Enter ECID : ";
     std::getline(std::cin, input_ecid);
 
     std::string ecid = is_hex(input_ecid) ? hex_to_dec(input_ecid) : input_ecid;
